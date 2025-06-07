@@ -6,7 +6,7 @@ entries:
       versioning: automated
     apiVersion: v2
     appVersion: v0.1.4
-    created: "2025-06-06T14:30:35.842354954Z"
+    created: "2025-06-07T07:40:03.3789588Z"
     description: Kronic - The simple Kubernetes CronJob Admin UI
     digest: 2fbd59606d1653490e6c4f00d751c5dc941701eeeb882938f4ace3048de8395c
     home: https://github.com/davides93/kronic
@@ -24,7 +24,7 @@ entries:
       versioning: automated
     apiVersion: v2
     appVersion: v0.1.4
-    created: "2025-06-06T14:30:35.841794464Z"
+    created: "2025-06-07T07:40:03.37838586Z"
     description: Kronic - The simple Kubernetes CronJob Admin UI
     digest: 4ace907cc48cce65561d30c2471392b29eb2c1c2ddeeab0c29c525d53f553305
     home: https://github.com/davides93/kronic
@@ -41,7 +41,7 @@ entries:
       artifacthub.io/category: monitoring-logging
     apiVersion: v2
     appVersion: v0.1.4
-    created: "2025-06-06T14:30:35.841212074Z"
+    created: "2025-06-07T07:40:03.37630984Z"
     description: Kronic - The simple Kubernetes CronJob Admin UI
     digest: ac9ad0afe1f06fa8dc470c7df5ff9fe8c1b36f3087c1782db9e6c274ed4da4ed
     home: https://github.com/davides93/kronic
@@ -54,4 +54,4 @@ entries:
     urls:
     - https://davides93.github.io/kronic/charts/kronic-0.1.7.tgz
     version: 0.1.7
-generated: "2025-06-06T14:30:35.840413604Z"
+generated: "2025-06-07T07:40:03.375613629Z"

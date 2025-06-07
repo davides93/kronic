@@ -63,6 +63,12 @@ database:
     requests:
       cpu: 100m
       memory: 256Mi
+  # -- Scheduling affinity for PostgreSQL pods
+  affinity: {}
+  # -- Tolerations for PostgreSQL pods
+  tolerations: []
+  # -- Node selector for PostgreSQL pods
+  nodeSelector: {}
 
 # Specify whether to create ClusterRole and ClusterRoleBinding
 # for kronic. If disabled, you will need to handle permissions
