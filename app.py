@@ -28,6 +28,7 @@ from kron import (
 # Import JWT authentication components
 from jwt_auth import init_limiter, optional_jwt, jwt_required
 from auth_api import auth_bp
+from rate_limiting import rate_limit
 
 app = Flask(__name__, static_url_path="", static_folder="static")
 auth = HTTPBasicAuth()
@@ -553,6 +554,7 @@ def view_cronjob_details(namespace, cronjob_name):
 
 
 @app.route("/api/")
+@rate_limit("api/*")
 @auth_required
 def api_index():
     if config.NAMESPACE_ONLY:
@@ -567,6 +569,7 @@ def api_index():
 
 @app.route("/api/namespaces/<namespace>/cronjobs")
 @app.route("/api/namespaces/<namespace>")
+@rate_limit("api/*")
 @namespace_filter
 @auth_required
 def api_namespace(namespace):
@@ -575,6 +578,7 @@ def api_namespace(namespace):
 
 
 @app.route("/api/namespaces/<namespace>/cronjobs/<cronjob_name>")
+@rate_limit("api/*")
 @namespace_filter
 @auth_required
 def api_get_cronjob(namespace, cronjob_name):
@@ -624,6 +628,7 @@ def api_clone_cronjob(namespace, cronjob_name):
 
 
 @app.route("/api/namespaces/<namespace>/cronjobs/create", methods=["POST"])
+@rate_limit("api/*")
 @namespace_filter
 @auth_required
 def api_create_cronjob(namespace):
@@ -646,6 +651,7 @@ def api_create_cronjob(namespace):
 @app.route(
     "/api/namespaces/<namespace>/cronjobs/<cronjob_name>/delete", methods=["POST"]
 )
+@rate_limit("api/*")
 @namespace_filter
 @auth_required
 def api_delete_cronjob(namespace, cronjob_name):
@@ -697,6 +703,7 @@ def api_toggle_cronjob_suspend(namespace, cronjob_name):
 @app.route(
     "/api/namespaces/<namespace>/cronjobs/<cronjob_name>/trigger", methods=["POST"]
 )
+@rate_limit("api/*")
 @namespace_filter
 @auth_required
 def api_trigger_cronjob(namespace, cronjob_name):

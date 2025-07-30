@@ -57,6 +57,12 @@ def init_limiter(app: Flask):
     global limiter
     if RATE_LIMIT_ENABLED:
         try:
+            # Import and initialize the enhanced rate limiting system
+            from rate_limiting import init_rate_limiter
+
+            rate_limiter = init_rate_limiter(app, redis_client)
+
+            # Keep the old limiter for backward compatibility
             storage_uri = REDIS_URL if redis_client else None
             limiter = Limiter(
                 key_func=get_remote_address,
@@ -65,6 +71,7 @@ def init_limiter(app: Flask):
                 default_limits=["200 per day", "50 per hour"],
             )
             log.info("Rate limiter initialized")
+            return rate_limiter
         except Exception as e:
             log.error(f"Failed to initialize rate limiter: {e}")
             limiter = None

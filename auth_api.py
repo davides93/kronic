@@ -22,6 +22,7 @@ from jwt_auth import (
     get_limiter,
     JWT_REFRESH_TOKEN_EXPIRES,
 )
+from rate_limiting import rate_limit, get_rate_limiter
 
 log = logging.getLogger("app.auth_api")
 
@@ -30,17 +31,9 @@ auth_bp = Blueprint("auth", __name__, url_prefix="/api/auth")
 
 
 @auth_bp.route("/login", methods=["POST"])
+@rate_limit("auth/login")
 def login():
     """Login endpoint with JWT token generation."""
-    limiter = get_limiter()
-
-    # Apply rate limiting if available
-    if limiter:
-        try:
-            limiter.limit("5 per 15 minutes")(lambda: None)()
-        except Exception as e:
-            log.warning(f"Rate limiting failed: {e}")
-
     data = request.get_json()
     if not data:
         return jsonify({"error": "Invalid request format"}), 400
@@ -130,6 +123,7 @@ def login():
 
 
 @auth_bp.route("/register", methods=["POST"])
+@rate_limit("auth/register")
 def register():
     """User registration endpoint."""
     data = request.get_json()
@@ -197,36 +191,9 @@ def register():
         201,
     )
 
-    # Create user
-    user = UserManager.create_user(
-        email, hashed_password, is_active=True, is_verified=False
-    )
-    if not user:
-        return (
-            jsonify(
-                {"error": "User with this email already exists or registration failed"}
-            ),
-            409,
-        )
-
-    log.info(f"New user registered: {email}")
-
-    return (
-        jsonify(
-            {
-                "message": "User registered successfully",
-                "user": {
-                    "id": str(user.id),
-                    "email": user.email,
-                    "is_verified": user.is_verified,
-                },
-            }
-        ),
-        201,
-    )
-
 
 @auth_bp.route("/refresh", methods=["POST"])
+@rate_limit("auth/refresh")
 def refresh_token():
     """Refresh access token using refresh token."""
     data = request.get_json()
@@ -329,6 +296,7 @@ def get_profile():
 
 
 @auth_bp.route("/change-password", methods=["POST"])
+@rate_limit("auth/change-password")
 @jwt_required
 def change_password():
     """Change user password."""
@@ -409,3 +377,21 @@ def check_auth():
             pass
 
     return jsonify({"authenticated": False}), 401
+
+
+@auth_bp.route("/rate-limit-status", methods=["GET"])
+def rate_limit_status():
+    """Get current rate limiting status."""
+    rate_limiter = get_rate_limiter()
+    if not rate_limiter:
+        return (
+            jsonify({"enabled": False, "message": "Rate limiting not available"}),
+            200,
+        )
+
+    try:
+        status = rate_limiter.get_rate_limit_status()
+        return jsonify(status), 200
+    except Exception as e:
+        log.error(f"Failed to get rate limit status: {e}")
+        return jsonify({"error": "Failed to get rate limit status"}), 500
