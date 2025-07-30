@@ -20,6 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       releaseTag: ${{ steps.meta.outputs.version }}
+      shaTag: ${{ steps.sha-tag.outputs.result }}
     permissions:
       contents: read
       packages: write
@@ -76,6 +77,13 @@ jobs:
             type=ref,event=pr
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
 
+      - name: Extract SHA tag
+        id: sha-tag
+        run: |
+          # Extract the SHA tag from the metadata tags
+          SHA_TAG=$(echo "${{ steps.meta.outputs.tags }}" | grep "sha-" | head -1 | cut -d':' -f2)
+          echo "result=${SHA_TAG}" >> $GITHUB_OUTPUT
+
       - name: Build Image
         uses: docker/build-push-action@v6
         with:
@@ -95,7 +103,7 @@ jobs:
       # - name: Run Trivy vulnerability scanner
       #   uses: aquasecurity/trivy-action@0.28.0
       #   with:
-      #     image-ref: '${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:sha-${{ github.sha }}'
+      #     image-ref: '${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.sha-tag.outputs.result }}'
       #     format: 'table'
       #     exit-code: '1'
       #     ignore-unfixed: true
@@ -128,12 +136,26 @@ jobs:
         run: |
           ct lint --charts chart/kronic --target-branch ${{ github.event.repository.default_branch }}
 
+      - name: Log into GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Create kind cluster
         uses: helm/kind-action@v1.10.0
+
+      - name: Pre-pull and load image into Kind
+        run: |
+          # Pull the image that was built and pushed
+          docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.build.outputs.shaTag }}
+          # Load the image into the Kind cluster
+          kind load docker-image ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.build.outputs.shaTag }}
 
       - name: Run chart-testing (install)
         run: |
           ct install --charts chart/kronic \
             --helm-extra-args '--timeout 60s' \
-            --helm-extra-set-args '--set=image.tag=${{ needs.build.outputs.releaseTag }}' \
+            --helm-extra-set-args '--set=image.tag=${{ needs.build.outputs.shaTag }}' \
             --target-branch ${{ github.event.repository.default_branch }}
